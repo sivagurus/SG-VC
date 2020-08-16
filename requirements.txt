@@ -1,0 +1,6 @@
+aiohttp
+aria2p
+hachoir
+Pillow
+git+git://github.com/pyrogram/pyrogram@asyncio-dev#pyrogram
+tgcrypto

@@ -1,0 +1,7 @@
+start - Checking bot live.
+compress - To compress the video.
+cancel - Stop the process.
+status - To know current server status
+exec - To execute
+log - Get log
+help - To know about bot
