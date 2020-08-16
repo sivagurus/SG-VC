@@ -1,8 +1,4 @@
 ---
-## Credits, and Thanks to
-
-* [Dan Tès](https://telegram.dog/haskell) for his [Pyrogram Library](https://github.com/pyrogram/pyrogram)
-
 
 ### Installation
 
