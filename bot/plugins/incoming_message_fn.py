@@ -169,6 +169,7 @@ async def incoming_compress_message_f(bot, update):
         video=o,
         caption=caption,
         supports_streaming=True,
+        duration=duration,
         # thumb=thumb_image_path,
         reply_to_message_id=update.message_id,
         progress=progress_for_pyrogram,
