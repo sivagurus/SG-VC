@@ -1,7 +1,7 @@
 ---
 
 ### Installation
-ss
+
 #### The Easy Way
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
@@ -35,10 +35,13 @@ class Development(Config):
 ### [@BotFather](https://telegram.dog/BotFather) Commands
 
 ```
-start - Check if the Bot is Online!
-help - How to use this Bot?
-me - Check Your Subscription
-compress - Compress Video
+start - Checking bot live.
+compress - To compress the video.
+cancel - Stop the process.
+status - To know current server status
+exec - To execute
+log - Get log
+help - To know about bot
 ```
 
 #### LICENSE

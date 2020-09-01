@@ -19,7 +19,8 @@ from bot import (
 )
 from bot.helper_funcs.ffmpeg import (
   convert_video,
-  media_info
+  media_info,
+  take_screen_shot
 )
 from bot.helper_funcs.display_progress import (
   progress_for_pyrogram,
@@ -67,6 +68,13 @@ async def incoming_compress_message_f(bot, update):
     except:
       pass
     return
+  quality = "28"
+  if len(update.command) > 1:
+    try:
+      if int(update.command[1]) < 51:
+        quality = str(update.command[1])
+    except:
+      pass
   user_file = str(update.from_user.id) + ".FFMpegRoBot.mkv"
   saved_file_path = DOWNLOAD_LOCATION + "/" + user_file
   LOGGER.info(saved_file_path)
@@ -149,11 +157,16 @@ async def incoming_compress_message_f(bot, update):
           pass          
       delete_downloads()
       return
+    thumb_image_path = await take_screen_shot(
+      saved_file_path,
+      os.path.dirname(os.path.abspath(saved_file_path)),
+      (duration / 2)
+    )
     await sent_message.edit_text(                    
       text=Localisation.COMPRESS_START                    
     )
     c_start = time.time()
-    o = await convert_video(saved_file_path, DOWNLOAD_LOCATION, duration, bot, sent_message)
+    o = await convert_video(saved_file_path, DOWNLOAD_LOCATION, duration, bot, sent_message, quality)
     compressed_time = TimeFormatter((time.time() - c_start)*1000)
     LOGGER.info(o)
     if o == 'stopped':
@@ -170,7 +183,7 @@ async def incoming_compress_message_f(bot, update):
         caption=caption,
         supports_streaming=True,
         duration=duration,
-        # thumb=thumb_image_path,
+        thumb=thumb_image_path,
         reply_to_message_id=update.message_id,
         progress=progress_for_pyrogram,
         progress_args=(
@@ -230,6 +243,7 @@ async def incoming_cancel_message_f(bot, update):
     reply_markup = InlineKeyboardMarkup(inline_keyboard)
     await update.reply_text("Are you sure? 🚫 This will stop the compression", reply_markup=reply_markup, quote=True)
   else:
+    delete_downloads()
     await bot.send_message(
       chat_id=update.chat.id,
       text="No active compression exists",

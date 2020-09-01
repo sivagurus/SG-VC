@@ -52,7 +52,8 @@ if __name__ == "__main__" :
         "SGVideoCompressBot",
         bot_token=TG_BOT_TOKEN,
         api_id=APP_ID,
-        api_hash=API_HASH
+        api_hash=API_HASH,
+        workers=2
     )
     #
     app.set_parse_mode("html")

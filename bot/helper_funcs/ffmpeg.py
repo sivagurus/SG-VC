@@ -17,8 +17,7 @@ import re
 import json
 import subprocess
 import math
-from hachoir.metadata import extractMetadata
-from hachoir.parser import createParser
+import psutil
 from bot.helper_funcs.display_progress import (
   TimeFormatter,
 )
@@ -28,7 +27,7 @@ from bot import (
     UN_FINISHED_PROGRESS_STR
 )
 
-async def convert_video(video_file, output_directory, total_time, bot, message):
+async def convert_video(video_file, output_directory, total_time, bot, message, quality):
     # https://stackoverflow.com/a/13891070/4723940
     out_put_file_name = output_directory + \
         "/" + str(round(time.time())) + ".mp4"
@@ -44,12 +43,14 @@ async def convert_video(video_file, output_directory, total_time, bot, message):
       progress,
       "-i",
       video_file,
-      "-c:v",
-      "libx265",
       "-preset", 
       "ultrafast",
+      "-c:v", 
+      "libx265",
       "-c:a",
       "copy",
+      "-crf",
+      quality,
       "-async",
       "1",
       "-strict",
@@ -72,9 +73,8 @@ async def convert_video(video_file, output_directory, total_time, bot, message):
       f.seek(0)
       json.dump(statusMsg,f,indent=2)
     # os.kill(process.pid, 9)
-    prevFrame = 0
-    sameFrame = 0
-    while True:
+    isDone = False
+    while process.returncode != 0:
       await asyncio.sleep(3)
       with open("/app/DOWNLOADS/progress.txt",'r+') as file:
         text = file.read()
@@ -86,13 +86,6 @@ async def convert_video(video_file, output_directory, total_time, bot, message):
           frame = int(frame[-1])
         else:
           frame = 1;
-        if frame == prevFrame:
-          LOGGER.info(frame)
-          sameFrame += 1
-        if sameFrame > 10:
-          LOGGER.info(frame)
-          return None
-        prevFrame = frame
         if len(speed):
           speed = speed[-1]
         else:
@@ -104,28 +97,38 @@ async def convert_video(video_file, output_directory, total_time, bot, message):
         if len(progress):
           if progress[-1] == "end":
             LOGGER.info(progress[-1])
+            isDone = True
             break
-        else:
-          LOGGER.info('no progress')
           
         elapsed_time = int(time_in_us)/1000000
         ETA = math.floor( (total_time - elapsed_time) / float(speed) )
-        LOGGER.info(TimeFormatter(ETA*1000))
         percentage = math.floor(elapsed_time * 100 / total_time)
         progress_str = "[{0}{1}] \nP: {2}%\n".format(
             ''.join([FINISHED_PROGRESS_STR for i in range(math.floor(percentage / 5))]),
             ''.join([UN_FINISHED_PROGRESS_STR for i in range(20 - math.floor(percentage / 5))]),
             round(percentage, 2))
+        cpuUsage = psutil.cpu_percent(interval=0.5)
+        memory = psutil.virtual_memory().percent
+        disk = psutil.disk_usage('/').percent
+        stats = f'🗜️ <b>Compressing</b>\n' \
+                f'🎦 <b>Quality</b> {quality}\n' \
+                f'⏳ <b>ETA</b> {TimeFormatter(ETA*1000)}\n' \
+                f'{progress_str}\n' \
+                f'🖥️ <b>CPU:</b> {cpuUsage}%\n' \
+                f'💽 <b>RAM:</b> {memory}%\n' \
+                f'💾 <b>Disk:</b> {disk}%'
         try:
-          #processing = Localisation.COMPRESS_PROGRESS.replace('{}', TimeFormatter(ETA*1000), 1).replace('{}', percentage, 2)
           await message.edit_text(
-            text="🗜️ Compressing\n\n⏳ ETA: "+TimeFormatter(ETA*1000)+"\n\n"+progress_str
+            text=stats
           )
         except:
             pass
         
     # Wait for the subprocess to finish
     stdout, stderr = await process.communicate()
+    if( not isDone):
+      return None
+    LOGGER.info(process.returncode)
     e_response = stderr.decode().strip()
     t_response = stdout.decode().strip()
     if os.path.lexists(out_put_file_name):
@@ -161,4 +164,39 @@ async def media_info(saved_file_path):
   else:
     bitrate = None
   return total_seconds, bitrate
+  
+async def take_screen_shot(video_file, output_directory, ttl):
+    # https://stackoverflow.com/a/13891070/4723940
+    out_put_file_name = os.path.join(
+        output_directory,
+        str(time.time()) + ".jpg"
+    )
+    if video_file.upper().endswith(("MKV", "MP4", "WEBM")):
+        file_genertor_command = [
+            "ffmpeg",
+            "-ss",
+            str(ttl),
+            "-i",
+            video_file,
+            "-vframes",
+            "1",
+            out_put_file_name
+        ]
+        # width = "90"
+        process = await asyncio.create_subprocess_exec(
+            *file_genertor_command,
+            # stdout must a pipe to be accessible as process.stdout
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        # Wait for the subprocess to finish
+        stdout, stderr = await process.communicate()
+        e_response = stderr.decode().strip()
+        t_response = stdout.decode().strip()
+    #
+    if os.path.lexists(out_put_file_name):
+        return out_put_file_name
+    else:
+        return None
+
     
