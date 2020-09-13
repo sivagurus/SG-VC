@@ -26,15 +26,24 @@ from bot import (
     UN_FINISHED_PROGRESS_STR
 )
 
-async def convert_video(video_file, output_directory, total_time, bot, message):
+async def convert_video(video_file, output_directory, total_time, bot, message, target_percentage):
     # https://stackoverflow.com/a/13891070/4723940
     out_put_file_name = output_directory + \
         "/" + str(round(time.time())) + ".mp4"
     progress = output_directory + "/" + "progress.txt"
     with open(progress, 'w') as f:
       pass
-    target_size = 10
-    target_bitrate = ( (target_size * 1000000) * 8 / total_time )
+    filesize = os.stat(video_file).st_size
+    calculated_percentage = 100 - target_percentage
+    target_size = ( calculated_percentage / 100 ) * filesize
+    target_bitrate = int(math.floor( target_size * 8 / total_time ))
+    if target_bitrate // 1000000 >= 1:
+      bitrate = str(target_bitrate//1000000) + "M"
+    elif target_bitrate // 1000 > 1:
+      bitrate = str(target_bitrate//1000) + "k"
+    else:
+      return None 
+    LOGGER.info(bitrate)
     file_genertor_command = [
       "ffmpeg",
       "-hide_banner",
@@ -45,11 +54,11 @@ async def convert_video(video_file, output_directory, total_time, bot, message):
       "-i",
       video_file,
       "-c:v", 
-      "libx265",
+      "libx264",
       "-preset", 
       "veryfast",
       "-b:v",
-      "250k",
+      bitrate,
       "-c:a",
       "copy",
       "-async",
@@ -112,7 +121,7 @@ async def convert_video(video_file, output_directory, total_time, bot, message):
             ''.join([FINISHED_PROGRESS_STR for i in range(math.floor(percentage / 10))]),
             ''.join([UN_FINISHED_PROGRESS_STR for i in range(10 - math.floor(percentage / 10))])
             )
-        stats = f'📦️ <b>Compressing</b>\n\n' \
+        stats = f'📦️ <b>Compressing</b> {target_percentage}%\n\n' \
                 f'⏰️ <b>Elapsed time:</b> {execution_time}\n\n' \
                 f'⏳ <b>ETA:</b> {ETA}\n\n' \
                 f'{progress_str}\n'
@@ -125,8 +134,8 @@ async def convert_video(video_file, output_directory, total_time, bot, message):
         
     # Wait for the subprocess to finish
     stdout, stderr = await process.communicate()
-    if( not isDone):
-      return None
+    #if( not isDone):
+      #return None
     LOGGER.info(process.returncode)
     e_response = stderr.decode().strip()
     t_response = stdout.decode().strip()
