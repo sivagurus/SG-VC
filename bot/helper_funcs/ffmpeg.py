@@ -18,7 +18,7 @@ import json
 import subprocess
 import math
 from bot.helper_funcs.display_progress import (
-  TimeFormatter,
+  TimeFormatter
 )
 from bot.localisation import Localisation
 from bot import (
@@ -33,6 +33,8 @@ async def convert_video(video_file, output_directory, total_time, bot, message):
     progress = output_directory + "/" + "progress.txt"
     with open(progress, 'w') as f:
       pass
+    target_size = 10
+    target_bitrate = ( (target_size * 1000000) * 8 / total_time )
     file_genertor_command = [
       "ffmpeg",
       "-hide_banner",
@@ -45,7 +47,9 @@ async def convert_video(video_file, output_directory, total_time, bot, message):
       "-c:v", 
       "libx265",
       "-preset", 
-      "ultrafast",
+      "veryfast",
+      "-b:v",
+      "250k",
       "-c:a",
       "copy",
       "-async",
@@ -54,7 +58,7 @@ async def convert_video(video_file, output_directory, total_time, bot, message):
       "-2",
       out_put_file_name
     ]
-    
+    COMPRESSION_START_TIME = time.time()
     process = await asyncio.create_subprocess_exec(
         *file_genertor_command,
         # stdout must a pipe to be accessible as process.stdout
@@ -96,17 +100,21 @@ async def convert_video(video_file, output_directory, total_time, bot, message):
             LOGGER.info(progress[-1])
             isDone = True
             break
-          
+        execution_time = TimeFormatter((time.time() - COMPRESSION_START_TIME)*1000)
         elapsed_time = int(time_in_us)/1000000
-        ETA = math.floor( (total_time - elapsed_time) / float(speed) )
+        difference = math.floor( (total_time - elapsed_time) / float(speed) )
+        ETA = "-"
+        if difference > 0:
+          ETA = TimeFormatter(difference*1000)
         percentage = math.floor(elapsed_time * 100 / total_time)
         progress_str = "📊 <b>Progress:</b> {0}%\n[{1}{2}]".format(
             round(percentage, 2),
             ''.join([FINISHED_PROGRESS_STR for i in range(math.floor(percentage / 10))]),
             ''.join([UN_FINISHED_PROGRESS_STR for i in range(10 - math.floor(percentage / 10))])
             )
-        stats = f'🗜️ <b>Compressing</b>\n\n' \
-                f'⏳ <b>ETA:</b> {TimeFormatter(ETA*1000)}\n\n' \
+        stats = f'📦️ <b>Compressing</b>\n\n' \
+                f'⏰️ <b>Elapsed time:</b> {execution_time}\n\n' \
+                f'⏳ <b>ETA:</b> {ETA}\n\n' \
                 f'{progress_str}\n'
         try:
           await message.edit_text(

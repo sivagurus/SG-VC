@@ -43,7 +43,10 @@ async def button(bot, update: CallbackQuery):
                     f.seek(0)
                     json.dump(statusMsg, f, indent=2)
                     if 'pid' in statusMsg.keys():
-                        os.kill(statusMsg["pid"], 9)
+                        try:
+                            os.kill(statusMsg["pid"], 9)
+                        except:
+                            pass
                         delete_downloads()
                     try:
                         await bot.delete_messages(update.message.chat.id, statusMsg["message"])
