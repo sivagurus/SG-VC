@@ -68,7 +68,7 @@ async def incoming_compress_message_f(bot, update):
     except:
       pass
     return
-  quality = "28"
+  quality = "23"
   if len(update.command) > 1:
     try:
       if int(update.command[1]) < 51:
