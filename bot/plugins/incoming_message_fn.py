@@ -68,13 +68,7 @@ async def incoming_compress_message_f(bot, update):
     except:
       pass
     return
-  quality = "23"
-  if len(update.command) > 1:
-    try:
-      if int(update.command[1]) < 51:
-        quality = str(update.command[1])
-    except:
-      pass
+
   user_file = str(update.from_user.id) + ".FFMpegRoBot.mkv"
   saved_file_path = DOWNLOAD_LOCATION + "/" + user_file
   LOGGER.info(saved_file_path)
@@ -166,7 +160,7 @@ async def incoming_compress_message_f(bot, update):
       text=Localisation.COMPRESS_START                    
     )
     c_start = time.time()
-    o = await convert_video(saved_file_path, DOWNLOAD_LOCATION, duration, bot, sent_message, quality)
+    o = await convert_video(saved_file_path, DOWNLOAD_LOCATION, duration, bot, sent_message)
     compressed_time = TimeFormatter((time.time() - c_start)*1000)
     LOGGER.info(o)
     if o == 'stopped':

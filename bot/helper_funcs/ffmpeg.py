@@ -26,7 +26,7 @@ from bot import (
     UN_FINISHED_PROGRESS_STR
 )
 
-async def convert_video(video_file, output_directory, total_time, bot, message, quality):
+async def convert_video(video_file, output_directory, total_time, bot, message):
     # https://stackoverflow.com/a/13891070/4723940
     out_put_file_name = output_directory + \
         "/" + str(round(time.time())) + ".mp4"
@@ -100,14 +100,13 @@ async def convert_video(video_file, output_directory, total_time, bot, message, 
         elapsed_time = int(time_in_us)/1000000
         ETA = math.floor( (total_time - elapsed_time) / float(speed) )
         percentage = math.floor(elapsed_time * 100 / total_time)
-        progress_str = "📊 <b>Progress:</b> {0}%\n [{1}{2}]".format(
+        progress_str = "📊 <b>Progress:</b> {0}%\n[{1}{2}]".format(
             round(percentage, 2),
             ''.join([FINISHED_PROGRESS_STR for i in range(math.floor(percentage / 10))]),
             ''.join([UN_FINISHED_PROGRESS_STR for i in range(10 - math.floor(percentage / 10))])
             )
-        stats = f'🗜️ <b>Compressing</b>\n' \
-                f'🎦 <b>Quality:</b> {quality}\n' \
-                f'⏳ <b>ETA:</b> {TimeFormatter(ETA*1000)}\n' \
+        stats = f'🗜️ <b>Compressing</b>\n\n' \
+                f'⏳ <b>ETA:</b> {TimeFormatter(ETA*1000)}\n\n' \
                 f'{progress_str}\n'
         try:
           await message.edit_text(
