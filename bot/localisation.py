@@ -24,7 +24,6 @@ class Localisation:
     
     FORMAT_SELECTION = "Select the desired format: <a href='{}'>file size might be approximate</a> \nIf you want to set custom thumbnail, send photo before or quickly after tapping on any of the below buttons.\nYou can use /deletethumbnail to delete the auto-generated thumbnail."
     
-    
     DOWNLOAD_START = "📥 Downloading 📥 \n"
     
     UPLOAD_START = "📤 Uploading 📤 \n"
@@ -59,7 +58,7 @@ class Localisation:
     
     HELP_MESSAGE = get_config(
         "STRINGS_HELP_MESSAGE",
-        "I compress Videos and upload It Replay /compress to Compress Video"
+        "I compress Videos and upload It Replay /compress to Compress Video.\nAvailable Percentage: 10 - 90\nAvailable presets:\n  ultrafast\n  superfast\n  veryfast\n  faster\n  fast\n  medium\n  slow\n  veryslow"
     )
     WRONG_MESSAGE = get_config(
         "STRINGS_WRONG_MESSAGE",

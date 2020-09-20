@@ -70,6 +70,7 @@ async def incoming_compress_message_f(bot, update):
     return
   target_percentage = 50
   isAuto = False
+  preset = "ultrafast"
   if len(update.command) > 1:
     try:
       if int(update.command[1]) <= 90 and int(update.command[1]) >= 10:
@@ -84,6 +85,29 @@ async def incoming_compress_message_f(bot, update):
           return
         except:
           pass
+      if len(update.command) > 2:
+        available_presets = [
+          "ultrafast", 
+          "superfast", 
+          "veryfast", 
+          "faster", 
+          "fast", 
+          "medium", 
+          "slow", 
+          "veryslow"
+        ]
+        if update.command[2] in available_presets:
+          preset = update.command[2]
+        else:
+          try:
+            await bot.send_message(
+              chat_id=update.chat.id,
+              text="🤬 invalid preset",
+              reply_to_message_id=update.message_id
+            )
+            return
+          except:
+            pass
     except:
       pass
   else:
@@ -186,7 +210,8 @@ async def incoming_compress_message_f(bot, update):
            bot, 
            sent_message, 
            target_percentage, 
-           isAuto
+           isAuto,
+           preset
          )
     compressed_time = TimeFormatter((time.time() - c_start)*1000)
     LOGGER.info(o)
@@ -201,6 +226,7 @@ async def incoming_compress_message_f(bot, update):
       upload = await bot.send_video(
         chat_id=update.chat.id,
         video=o,
+        file_name=update.reply_to_message.video.file_name,
         caption=caption,
         supports_streaming=True,
         duration=duration,

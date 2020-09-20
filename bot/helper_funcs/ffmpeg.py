@@ -26,7 +26,7 @@ from bot import (
     UN_FINISHED_PROGRESS_STR
 )
 
-async def convert_video(video_file, output_directory, total_time, bot, message, target_percentage, isAuto):
+async def convert_video(video_file, output_directory, total_time, bot, message, target_percentage, isAuto, preset):
     # https://stackoverflow.com/a/13891070/4723940
     out_put_file_name = output_directory + \
         "/" + str(round(time.time())) + ".mp4"
@@ -46,11 +46,15 @@ async def convert_video(video_file, output_directory, total_time, bot, message, 
       "-c:v", 
       "libx264",
       "-preset", 
-      "ultrafast",
+      preset,
       "-tune",
       "film",
       "-c:a",
       "copy",
+      "-async",
+      "1",
+      "-strict",
+      "-2",
       out_put_file_name
     ]
     if not isAuto:
@@ -71,6 +75,7 @@ async def convert_video(video_file, output_directory, total_time, bot, message, 
               ]
       for elem in reversed(extra) :
         file_genertor_command.insert(10, elem)
+      target_percentage = str(target_percentage) + "%"
     else:
        target_percentage = 'auto'
     COMPRESSION_START_TIME = time.time()
@@ -127,7 +132,8 @@ async def convert_video(video_file, output_directory, total_time, bot, message, 
             ''.join([FINISHED_PROGRESS_STR for i in range(math.floor(percentage / 10))]),
             ''.join([UN_FINISHED_PROGRESS_STR for i in range(10 - math.floor(percentage / 10))])
             )
-        stats = f'📦️ <b>Compressing</b> {target_percentage}%\n\n' \
+        stats = f'📦️ <b>Compressing</b> {target_percentage}\n\n' \
+                f'🚀 <b>Speed</b> {preset}\n\n' \
                 f'⏰️ <b>ETA:</b> {ETA}\n\n' \
                 f'{progress_str}\n'
         try:
@@ -151,17 +157,19 @@ async def convert_video(video_file, output_directory, total_time, bot, message, 
         return None
 
 async def media_info(saved_file_path):
-  process = subprocess.Popen(
-    [
-      'ffmpeg', 
-      "-hide_banner", 
-      '-i', 
-      saved_file_path
-    ], 
+  LOGGER.info(saved_file_path)
+  command  = [
+    "ffmpeg",
+    "-hide_banner",
+    "-i",
+    saved_file_path
+  ]
+  process = await asyncio.create_subprocess_exec(
+    *command, 
     stdout=subprocess.PIPE, 
     stderr=subprocess.STDOUT
   )
-  stdout, stderr = process.communicate()
+  stdout, stderr = await process.communicate()
   output = stdout.decode().strip()
   duration = re.search("Duration:\s*(\d*):(\d*):(\d+\.?\d*)[\s\w*$]",output)
   bitrates = re.search("bitrate:\s*(\d+)[\s\w*$]",output)
@@ -188,6 +196,7 @@ async def take_screen_shot(video_file, output_directory, ttl):
     if video_file.upper().endswith(("MKV", "MP4", "WEBM")):
         file_genertor_command = [
             "ffmpeg",
+            "-hide_banner",
             "-ss",
             str(ttl),
             "-i",

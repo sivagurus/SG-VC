@@ -47,7 +47,7 @@ async def button(bot, update: CallbackQuery):
                             os.kill(statusMsg["pid"], 9)
                         except:
                             pass
-                        delete_downloads()
+                    delete_downloads()
                     try:
                         await bot.delete_messages(update.message.chat.id, statusMsg["message"])
                     except:
