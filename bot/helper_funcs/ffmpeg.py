@@ -43,12 +43,16 @@ async def convert_video(video_file, output_directory, total_time, bot, message, 
       progress,
       "-i",
       video_file,
-      "-vcodec", 
-      "h264",
       "-preset", 
       preset,
-      "-acodec",
+      "-c:v", 
+      "libx265",
+      "-c:a",
       "copy",
+      "-async",
+      "1",
+      "-strict",
+      "-2",
       out_put_file_name
     ]
     if not isAuto:
@@ -62,11 +66,12 @@ async def convert_video(video_file, output_directory, total_time, bot, message, 
         bitrate = str(target_bitrate//1000) + "k"
       else:
         return None
+      LOGGER.info(bitrate)
       extra = [ "-b:v", 
                 bitrate
               ]
       for elem in reversed(extra) :
-        file_genertor_command.insert(10, elem)
+        file_genertor_command.insert(12, elem)
       target_percentage = str(target_percentage) + "%"
     else:
        target_percentage = 'auto'
