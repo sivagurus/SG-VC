@@ -43,18 +43,12 @@ async def convert_video(video_file, output_directory, total_time, bot, message, 
       progress,
       "-i",
       video_file,
-      "-c:v", 
-      "libx264",
+      "-vcodec", 
+      "h264",
       "-preset", 
       preset,
-      "-tune",
-      "film",
-      "-c:a",
+      "-acodec",
       "copy",
-      "-async",
-      "1",
-      "-strict",
-      "-2",
       out_put_file_name
     ]
     if not isAuto:
@@ -69,8 +63,6 @@ async def convert_video(video_file, output_directory, total_time, bot, message, 
       else:
         return None
       extra = [ "-b:v", 
-                bitrate,
-                "-bufsize",
                 bitrate
               ]
       for elem in reversed(extra) :
