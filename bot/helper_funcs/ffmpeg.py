@@ -26,7 +26,7 @@ from bot import (
     UN_FINISHED_PROGRESS_STR
 )
 
-async def convert_video(video_file, output_directory, total_time, bot, message, target_percentage, isAuto, preset):
+async def convert_video(video_file, output_directory, total_time, bot, message, crf, preset):
     # https://stackoverflow.com/a/13891070/4723940
     out_put_file_name = output_directory + \
         "/" + str(round(time.time())) + ".mp4"
@@ -43,38 +43,18 @@ async def convert_video(video_file, output_directory, total_time, bot, message, 
       progress,
       "-i",
       video_file,
+      "-movflags",
+      "faststart",
       "-preset", 
       preset,
       "-c:v", 
-      "libx265",
+      "libx264",
+      "-crf",
+      str(crf),
       "-c:a",
       "copy",
-      "-async",
-      "1",
-      "-strict",
-      "-2",
       out_put_file_name
     ]
-    if not isAuto:
-      filesize = os.stat(video_file).st_size
-      calculated_percentage = 100 - target_percentage
-      target_size = ( calculated_percentage / 100 ) * filesize
-      target_bitrate = int(math.floor( target_size * 8 / total_time ))
-      if target_bitrate // 1000000 >= 1:
-        bitrate = str(target_bitrate//1000000) + "M"
-      elif target_bitrate // 1000 > 1:
-        bitrate = str(target_bitrate//1000) + "k"
-      else:
-        return None
-      LOGGER.info(bitrate)
-      extra = [ "-b:v", 
-                bitrate
-              ]
-      for elem in reversed(extra) :
-        file_genertor_command.insert(12, elem)
-      target_percentage = str(target_percentage) + "%"
-    else:
-       target_percentage = 'auto'
     COMPRESSION_START_TIME = time.time()
     process = await asyncio.create_subprocess_exec(
         *file_genertor_command,
@@ -124,12 +104,14 @@ async def convert_video(video_file, output_directory, total_time, bot, message, 
         if difference > 0:
           ETA = TimeFormatter(difference*1000)
         percentage = math.floor(elapsed_time * 100 / total_time)
+        if percentage > 100:
+          percentage = 100
         progress_str = "📊 <b>Progress:</b> {0}%\n[{1}{2}]".format(
             round(percentage, 2),
             ''.join([FINISHED_PROGRESS_STR for i in range(math.floor(percentage / 10))]),
             ''.join([UN_FINISHED_PROGRESS_STR for i in range(10 - math.floor(percentage / 10))])
             )
-        stats = f'📦️ <b>Compressing</b> {target_percentage}\n\n' \
+        stats = f'📦️ <b>Compressing</b> CRF:{crf}\n\n' \
                 f'🚀 <b>Speed</b> {preset}\n\n' \
                 f'⏰️ <b>ETA:</b> {ETA}\n\n' \
                 f'{progress_str}\n'
